@@ -1,4 +1,7 @@
-﻿namespace BasketService.Model.Services.BasketServices;
+﻿using BasketService.Model.Dtos;
+using BasketService.Model.Services.DiscountServices;
+
+namespace BasketService.Model.Services.BasketServices;
 
 public interface IBasketService
 {
@@ -8,5 +11,6 @@ public interface IBasketService
     void RemoveItemFromBasket(Guid ItemId);
     void SetQuantities(Guid itemId, int quantity);
     void TransferBasket(string anonymousId, string UserId);
-    void ApplyDiscountToBasket(Guid BasketId, Guid DiscountId);
+    void ApplyDiscountToBasket(Guid BasketId, Guid DiscountId); 
+    ResultDto CheckoutBasket(CheckoutBasketDto checkoutBasket, IDiscountService discountService);
 }

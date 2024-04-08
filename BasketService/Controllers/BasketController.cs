@@ -1,4 +1,5 @@
 ﻿using BasketService.Model.Services.BasketServices;
+using BasketService.Model.Services.DiscountServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BasketService.Controllers;
@@ -48,5 +49,15 @@ public class BasketController : ControllerBase
     {
         basketService.ApplyDiscountToBasket(basketId, discountId);
         return Accepted();
+    }
+    [HttpPost("CheckoutBasket")]
+    public IActionResult CheckoutBasket(CheckoutBasketDto checkoutBasket,
+            [FromServices] IDiscountService discountService)
+    {
+        var result = basketService.CheckoutBasket(checkoutBasket, discountService);
+        if (result.IsSuccess)
+            return Ok(result);
+        else
+            return StatusCode(500, result);
     }
 }

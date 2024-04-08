@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using BasketService.Infrastructure.Contexts;
+using BasketService.Model.Dtos;
 using BasketService.Model.Entities;
+using BasketService.Model.Services.DiscountServices;
 using Microsoft.EntityFrameworkCore;
 
 namespace BasketService.Model.Services.BasketServices;
@@ -174,5 +176,36 @@ public class RBasketService : IBasketService
             Id = basket.Id,
         };
     }
+    public ResultDto CheckoutBasket(CheckoutBasketDto checkoutBasket, IDiscountService discountService)
+    {
+        // دریافت سبد خرید
+        var basket = context.Baskets.Include(p => p.Items)
+            .ThenInclude(p => p.Product).SingleOrDefault(p => p.Id == checkoutBasket.BasketId);
+        if (basket == null)
+        {
+            return new ResultDto
+            {
+                IsSuccess = false,
+                Message = $"{nameof(basket)} Not Found!",
+            };
+        }
+        // دریافت تخفیف از سرویس discount
+        DiscountDto discount = null;
+        if (basket.DiscountId.HasValue)
+            discount = discountService.GetDiscountById(basket.DiscountId.Value);
 
+
+
+        // ارسال پیام برای سرویس Order
+
+
+        //حذف سبد خرید
+        context.Baskets.Remove(basket);
+        context.SaveChanges();
+        return new ResultDto
+        {
+            IsSuccess = true,
+            Message = "سفارش با موفقیت ثبت شد",
+        };
+    }
 }
