@@ -1,6 +1,6 @@
 using BasketService.Infrastructure.Contexts;
 using BasketService.Infrastructure.MappingProfile;
-using BasketService.Model.Services;
+using BasketService.Model.Services.BasketServices;
 using BasketService.Model.Services.DiscountServices;
 using Microsoft.EntityFrameworkCore;
 using SayyehBanTools.ConnectionDB;
