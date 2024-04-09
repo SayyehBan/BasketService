@@ -1,8 +1,10 @@
 using BasketService.Infrastructure.Contexts;
 using BasketService.Infrastructure.MappingProfile;
+using BasketService.MessageingBus;
 using BasketService.Model.Services.BasketServices;
 using BasketService.Model.Services.DiscountServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using SayyehBanTools.ConnectionDB;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +15,10 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<BasketDataBaseContext>(p => p.UseSqlServer(SqlServerConnection.ConnectionString("R3hqmv70CrzGD9McXmmdOg==", "qVj0t1nCGZdaF6ktSQydaQ==", "Fx1DLG7aIQ9DyBk2gdNpUw==", "3xaGPOSYEg7nv5N5r3yCjA==", "5u28ligne404216t", "9fd51b5b16374u0e")));
 builder.Services.AddTransient<IBasketService, RBasketService>();
 builder.Services.AddTransient<IDiscountService, RDiscountService>();
+//RabbitMQ
+builder.Services.Configure<RabbitMqConfiguration>(builder.Configuration
+    .GetSection("RabbitMq"));
+builder.Services.AddScoped<IMessageBus, RabbitMQMessageBus>();
 //mapper
 builder.Services.AddAutoMapper(typeof(BasketMappingProfile));
 

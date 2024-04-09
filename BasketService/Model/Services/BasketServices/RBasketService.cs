@@ -1,9 +1,13 @@
 ﻿using AutoMapper;
 using BasketService.Infrastructure.Contexts;
+using BasketService.MessageingBus;
 using BasketService.Model.Dtos;
 using BasketService.Model.Entities;
+using BasketService.Model.Services.BasketServices.MessageDto;
 using BasketService.Model.Services.DiscountServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SayyehBanTools.Calc;
 
 namespace BasketService.Model.Services.BasketServices;
 
@@ -11,11 +15,14 @@ public class RBasketService : IBasketService
 {
     private readonly BasketDataBaseContext context;
     private readonly IMapper mapper;
-
-    public RBasketService(BasketDataBaseContext context, IMapper mapper)
+    private readonly IMessageBus messageBus;
+    private readonly string queueName_CheckoutBasket;
+    public RBasketService(BasketDataBaseContext context, IMapper mapper, IMessageBus messageBus, IOptions<RabbitMqConfiguration> rabbitMqOptions)
     {
         this.context = context;
         this.mapper = mapper;
+        this.messageBus = messageBus;
+        queueName_CheckoutBasket = rabbitMqOptions.Value.QueueName_BasketCheckout;
     }
 
     public void AddItemToBasket(AddItemToBasketDto item)
@@ -189,16 +196,43 @@ public class RBasketService : IBasketService
                 Message = $"{nameof(basket)} Not Found!",
             };
         }
-        // دریافت تخفیف از سرویس discount
-        DiscountDto discount = null;
-        if (basket.DiscountId.HasValue)
-            discount = discountService.GetDiscountById(basket.DiscountId.Value);
+
 
 
 
         // ارسال پیام برای سرویس Order
+        BasketCheckoutMessage message = mapper.Map<BasketCheckoutMessage>
+            (checkoutBasket);
+        int totalPrice = 0;
+        foreach (var item in basket.Items)
+        {
+            var basketItem = new BasketItemMessage
+            {
+                BasketItemId = item.Id,
+                ProductId = item.ProductId,
+                Name = item.Product.ProductName,
+                Price = item.Product.UnitPrice,
+                Quantity = item.Quantity,
+            };
+            totalPrice += Convert.ToInt32(Calculator.Multiply(item.Product.UnitPrice, item.Quantity));
+            message.BasketItems.Add(basketItem);
+        }
 
-
+        // دریافت تخفیف از سرویس discount
+        DiscountDto discount = null;
+        if (basket.DiscountId.HasValue)
+            discount = discountService.GetDiscountById(basket.DiscountId.Value);
+        if (discount != null)
+        {
+            message.TotalPrice = Convert.ToInt32(Calculator.Subtract(totalPrice, discount.Amount));
+        }
+        else
+        {
+            message.TotalPrice = totalPrice;
+        }
+        //ارسال پیام به 
+        //RabbitMQ
+        messageBus.SendMessage(message, queueName_CheckoutBasket);
         //حذف سبد خرید
         context.Baskets.Remove(basket);
         context.SaveChanges();
