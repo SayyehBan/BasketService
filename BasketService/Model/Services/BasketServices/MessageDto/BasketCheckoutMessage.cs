@@ -1,4 +1,5 @@
-﻿using BasketService.MessageingBus;
+﻿
+using SayyehBanTools.MessagingBus.RabbitMQ.Model;
 
 namespace BasketService.Model.Services.BasketServices.MessageDto;
 

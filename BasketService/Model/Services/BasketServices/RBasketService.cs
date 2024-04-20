@@ -1,6 +1,7 @@
-﻿using AutoMapper;
+﻿
+
+using AutoMapper;
 using BasketService.Infrastructure.Contexts;
-using BasketService.MessageingBus;
 using BasketService.Model.Dtos;
 using BasketService.Model.Entities;
 using BasketService.Model.Services.BasketServices.MessageDto;
@@ -8,6 +9,8 @@ using BasketService.Model.Services.DiscountServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SayyehBanTools.Calc;
+using SayyehBanTools.MessagingBus.RabbitMQ.Model;
+using SayyehBanTools.MessagingBus.RabbitMQ.SendMessage;
 
 namespace BasketService.Model.Services.BasketServices;
 
@@ -15,14 +18,14 @@ public class RBasketService : IBasketService
 {
     private readonly BasketDataBaseContext context;
     private readonly IMapper mapper;
-    private readonly IMessageBus messageBus;
+    private readonly ISendMessages messageBus;
     private readonly string queueName_CheckoutBasket;
-    public RBasketService(BasketDataBaseContext context, IMapper mapper, IMessageBus messageBus, IOptions<RabbitMqConfiguration> rabbitMqOptions)
+    public RBasketService(BasketDataBaseContext context, IMapper mapper, ISendMessages messageBus, IOptions<RabbitMqConnectionSettings> rabbitMqOptions)
     {
         this.context = context;
         this.mapper = mapper;
         this.messageBus = messageBus;
-        queueName_CheckoutBasket = rabbitMqOptions.Value.QueueName_BasketCheckout;
+        queueName_CheckoutBasket = rabbitMqOptions.Value.queue;
     }
 
     public void AddItemToBasket(AddItemToBasketDto item)
@@ -232,6 +235,7 @@ public class RBasketService : IBasketService
         }
         //ارسال پیام به 
         //RabbitMQ
+        //ارسال پیام
         messageBus.SendMessage(message, queueName_CheckoutBasket);
         //حذف سبد خرید
         context.Baskets.Remove(basket);

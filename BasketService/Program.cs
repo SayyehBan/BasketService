@@ -1,11 +1,11 @@
-using BasketService.Infrastructure.Contexts;
+﻿using BasketService.Infrastructure.Contexts;
 using BasketService.Infrastructure.MappingProfile;
-using BasketService.MessageingBus;
 using BasketService.Model.Services.BasketServices;
 using BasketService.Model.Services.DiscountServices;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using SayyehBanTools.ConfigureService;
 using SayyehBanTools.ConnectionDB;
+using SayyehBanTools.MessagingBus.RabbitMQ.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +16,12 @@ builder.Services.AddDbContext<BasketDataBaseContext>(p => p.UseSqlServer(SqlServ
 builder.Services.AddTransient<IBasketService, RBasketService>();
 builder.Services.AddTransient<IDiscountService, RDiscountService>();
 //RabbitMQ
-builder.Services.Configure<RabbitMqConfiguration>(builder.Configuration
+builder.Services.Configure<RabbitMqConnectionSettings>(builder.Configuration
     .GetSection("RabbitMq"));
-builder.Services.AddScoped<IMessageBus, RabbitMQMessageBus>();
+//builder.Services.AddScoped<IMessageBus, RabbitMQMessageBus>();
+//پیکربندی های پیش فرض SayyehbanTools
+var configureServices = new ConfigureServicesRabbitMQ();
+configureServices.ConfigureService(builder.Services);
 //mapper
 builder.Services.AddAutoMapper(typeof(BasketMappingProfile));
 
