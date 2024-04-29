@@ -236,7 +236,7 @@ public class RBasketService : IBasketService
         //ارسال پیام به 
         //RabbitMQ
         //ارسال پیام
-        messageBus.SendMessage(message, queueName_CheckoutBasket);
+        messageBus.SendMessage(message,null, queueName_CheckoutBasket);
         //حذف سبد خرید
         context.Baskets.Remove(basket);
         context.SaveChanges();
