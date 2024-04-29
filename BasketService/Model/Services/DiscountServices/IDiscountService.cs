@@ -1,4 +1,5 @@
 ﻿using BasketService.Model.Dtos;
+using BasketService.Model.Links;
 using DiscountService.Proto;
 using Grpc.Net.Client;
 
@@ -11,13 +12,11 @@ public interface IDiscountService
 }
 public class RDiscountService : IDiscountService
 {
-    private readonly IConfiguration configuration;
     private readonly GrpcChannel channel;
 
-    public RDiscountService(IConfiguration configuration)
+    public RDiscountService()
     {
-        this.configuration = configuration;
-        channel = GrpcChannel.ForAddress(configuration["MicroservicAddress:Discount:Uri"]);
+        channel = GrpcChannel.ForAddress(LinkServer.Discount);
     }
     public ResultDto<DiscountDto> GetDiscountByCode(string Code)
     {

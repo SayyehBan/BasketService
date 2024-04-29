@@ -1,5 +1,5 @@
-﻿using BasketService.Model.Services.ProductServices;
-using Microsoft.Extensions.Options;
+﻿using BasketService.Model.Links;
+using BasketService.Model.Services.ProductServices;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -11,24 +11,19 @@ namespace BasketService.MessageingBus.ReceivedMessages.ProductMessages;
 
 public class ReceivedUpdateProductNameMessage : BackgroundService
 {
-    private readonly RabbitMqConnectionSettings _rabbitMqConnectionSettings;
     private readonly RabbitMQConnection rabbitMQConnection;
-    private readonly string _queueName= "Basket_GetMessageOnUpdateProductName";
-    private readonly string _exchangeName= "UpdateProductName";
     private readonly IProductService productService;
-    public ReceivedUpdateProductNameMessage(RabbitMQConnection rabbitMQConnection,  IOptions<RabbitMqConnectionSettings> rabbitMqConnectionSettings, IProductService productService)
+    public ReceivedUpdateProductNameMessage(RabbitMQConnection rabbitMQConnection, IProductService productService)
     {
-        _rabbitMqConnectionSettings = rabbitMqConnectionSettings.Value;
-       
         this.rabbitMQConnection = rabbitMQConnection;
         this.rabbitMQConnection.CreateRabbitMQConnection();
         this.rabbitMQConnection.Channel = rabbitMQConnection.Connection.CreateModel();
         this.productService = productService;
-        this.rabbitMQConnection.Channel.QueueDeclare(queue: _exchangeName, durable: true,
+        this.rabbitMQConnection.Channel.QueueDeclare(queue: RabbitMQLink.UpdateProductName, durable: true,
             exclusive: false, autoDelete: false, arguments: null);
-        this.rabbitMQConnection.Channel.ExchangeDeclare(_exchangeName, ExchangeType.Fanout, true, false);
-        this.rabbitMQConnection.Channel.QueueDeclare(_queueName, true, false, false);
-        this.rabbitMQConnection.Channel.QueueBind(_queueName, _exchangeName, "");
+        this.rabbitMQConnection.Channel.ExchangeDeclare(RabbitMQLink.UpdateProductName, ExchangeType.Fanout, true, false);
+        this.rabbitMQConnection.Channel.QueueDeclare(RabbitMQLink.Basket_GetMessageOnUpdateProductName, true, false, false);
+        this.rabbitMQConnection.Channel.QueueBind(RabbitMQLink.Basket_GetMessageOnUpdateProductName, RabbitMQLink.UpdateProductName, "");
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -44,7 +39,7 @@ public class ReceivedUpdateProductNameMessage : BackgroundService
                 rabbitMQConnection.Channel.BasicAck(ea.DeliveryTag, false);
         };
 
-        rabbitMQConnection.Channel.BasicConsume(_queueName, false, consumer);
+        rabbitMQConnection.Channel.BasicConsume(RabbitMQLink.Basket_GetMessageOnUpdateProductName, false, consumer);
         return Task.CompletedTask;
     }
 
