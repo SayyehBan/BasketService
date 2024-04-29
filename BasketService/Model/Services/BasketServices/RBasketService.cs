@@ -1,6 +1,4 @@
-﻿
-
-using AutoMapper;
+﻿using AutoMapper;
 using BasketService.Infrastructure.Contexts;
 using BasketService.Model.Dtos;
 using BasketService.Model.Entities;
